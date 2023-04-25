@@ -7,6 +7,8 @@ public class Enemy : MonoBehaviour {
 	public GameObject damagePopup; //a reference to the damagePopup prefab
 	public Transform PopupSpawnPoint; //the parent object
 	public int enemyID;
+	public AudioClip damageClip;
+	public AudioClip deathClip;
 
 	private int maxHealth; //the max health
 	private int loot; //how much money the player will get after killing this enemy
@@ -14,11 +16,14 @@ public class Enemy : MonoBehaviour {
 	private HealthBar healthBar; //reference to the healthBar script on this enemy
 	private Animator anim;
 	private ParticleSystem deathParticle; //particle will play after death
+	private ParticleSystem hitParticle; //particle will play after hit
 	private GameObject canvas; //the canvas used to show health bar and damage popup text
+	private AudioSource audioSource;
+	private CameraShake cameraShake;
 
 	private float kecepatan = 5f;
 	private float tempKecepatan;
-    private float jarak = 230f;
+    private float jarak = 300f;
 	[HideInInspector] public Vector3 awalPosisi;
 
 	private GameObject masterMonster;
@@ -27,11 +32,13 @@ public class Enemy : MonoBehaviour {
 	{
 		healthBar = GetComponentInChildren<HealthBar> ();
 
-		deathParticle = GetComponentInChildren<ParticleSystem> ();
+		deathParticle = transform.Find("DeathParticle").GetComponent<ParticleSystem>();
+		hitParticle = transform.Find("DamageParticle").GetComponent<ParticleSystem>();
 
 		canvas = GetComponentInChildren<Canvas> ().gameObject;
 
-		
+		audioSource = GetComponent<AudioSource>();
+		cameraShake = GameObject.Find("Main Camera").GetComponent<CameraShake>();
 	}
 
 	void Start ()
@@ -83,6 +90,8 @@ public class Enemy : MonoBehaviour {
 			Destroy (anim.gameObject);
 
 			deathParticle.Play (); //play death partivle
+			audioSource.PlayOneShot(deathClip);
+			cameraShake.shakeDuration = 0.3f;
 
 			canvas.SetActive (false); //hide the canvas
 
@@ -123,6 +132,11 @@ public class Enemy : MonoBehaviour {
 	private IEnumerator DamageAnim () //function to make the attack
 	{
 		tempKecepatan = kecepatan;
+		hitParticle.Play ();
+		if(!audioSource.isPlaying){
+			audioSource.PlayOneShot(damageClip);
+		}
+
 		kecepatan = 1f;
 		anim.SetTrigger ("Damage"); //trigger the animation when the enemy gets attacked
 		AnimatorStateInfo animasiStateInfo = anim.GetCurrentAnimatorStateInfo(0);

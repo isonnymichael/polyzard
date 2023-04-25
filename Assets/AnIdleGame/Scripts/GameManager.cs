@@ -27,6 +27,8 @@ public class GameManager : MonoBehaviour {
 	public int timeLimit; //the time limit of each round
 	public Player player; //reference to the Player script
 	public float nextRoundDelay; //seconds delay before starting next round
+
+	public Timer timer;
 	
 	[HideInInspector] public List<Enemy> enemies; //a list of enemy scripts
 	[HideInInspector] public List<int> aliveEnemies; //a list of alive enmeies
@@ -36,7 +38,6 @@ public class GameManager : MonoBehaviour {
 
 	private int level; //the monster level
 	private int countdown; //the number shows on top-left
-
 
 	public int Level
 	{
@@ -120,6 +121,7 @@ public class GameManager : MonoBehaviour {
 		StopCoroutine ("StartCountDown");
 
 		isBattling = false;
+		timer.timerRunning = false;
 
 		if (currentLevelCompleted) //if the battle is stopped because all enemies have been killed, we increase the monster level by 1 and check if there is any new skills to unlock
 		{
@@ -139,7 +141,8 @@ public class GameManager : MonoBehaviour {
 	
 	private IEnumerator StartCountDown ()
 	{
-		HUD.Instance.countDownText.text = timeLimit.ToString ();
+		timer.timerRunning = true;
+		timer.timeRemaining = (double) timeLimit;
 
 		countdown = timeLimit;
 
@@ -148,8 +151,6 @@ public class GameManager : MonoBehaviour {
 			yield return new WaitForSeconds (1f); //run the loop per second
 
 			countdown--; 
-
-			HUD.Instance.countDownText.text = countdown.ToString ();
 		}
 
 		StopBattle (); //stop the battle if running out of time
