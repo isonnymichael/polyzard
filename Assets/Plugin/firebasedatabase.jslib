@@ -112,15 +112,25 @@ mergeInto(LibraryManager.library, {
         }
     },
 
-    getLeaderboard: function(_limit) {
-        var limit = _limit;
+    getLeaderboard: function() {
 
         try {
-
-            firebase.database().ref('idle-game').orderByChild('-level').limitToFirst(limit).once('value', function(snapshot) {
+            console.log("load leaderboard js");
+            firebase.database().ref('idle-game').orderByChild('-level').limitToFirst(10).once('value', function(snapshot) {
+                var _leaderboard = {};
                 snapshot.forEach(function(childSnapshot) {
-                    return JSON.stringify(snapshot.val());
+                  var userId = childSnapshot.key;
+                  var userData = childSnapshot.val();
+                  _leaderboard[userId] = userData;
                 });
+                var sortedLeaderboard = Object.keys(_leaderboard).sort(function(a, b) {
+                  return _leaderboard[b].level - _leaderboard[a].level;
+                }).reduce(function(sortedObj, key) {
+                  sortedObj[key] = _leaderboard[key];
+                  return sortedObj;
+                }, {});
+
+                window._unityInstance.SendMessage("GameManager", "OnGetLeaderboard", JSON.stringify(sortedLeaderboard));
             });
 
         } catch (error) {

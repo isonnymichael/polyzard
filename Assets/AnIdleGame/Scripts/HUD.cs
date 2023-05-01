@@ -24,6 +24,19 @@ public class HUD : MonoBehaviour {
 	public Text levelText; //text to display the current monster level
 	public Text countDownText; //text to show how much time left in this round
 	public Color highlightColor; //color when a skill is selected
+	public GameObject panelStatusBattle;
+	public GameObject hudPanel;
+	public GameObject loaderToken;
+	public GameObject btnTempToken;
+	public GameObject btnDamageUp;
+	public GameObject loaderDamageUp;
+	public GameObject btnSpeedUp;
+	public GameObject loaderSpeedUp;
+	public GameObject prefabWarningUp;
+	public GameObject panelRedeem;
+	public GameObject btnLeaderBoard;
+	public GameObject panelLeaderBoard;
+	public Text textLeaderBoard;
 
 	private CanvasGroup abilityWindow; //the active skill selecting window
 

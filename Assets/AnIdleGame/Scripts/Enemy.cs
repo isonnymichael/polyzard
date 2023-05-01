@@ -83,7 +83,6 @@ public class Enemy : MonoBehaviour {
 			StopCoroutine ("Gerakan");
 
 			tempKecepatan = kecepatan;
-			kecepatan = 0;
 
 			health = 0; //change the value to 0, make sure it's not negative. we will used this value to calculate health ratio
 

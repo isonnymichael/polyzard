@@ -99,6 +99,8 @@ public class Menu : MonoBehaviour {
 
 	public void LoadGame () //function called when click continue button
 	{
+		GameSFX.Instance.playClickSound();
+		
 		newGame = false;
 
 		SceneManager.LoadScene(1);

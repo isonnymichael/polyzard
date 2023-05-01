@@ -132,11 +132,22 @@ namespace Thirdweb
             string taskId = Guid.NewGuid().ToString();
             var task = new TaskCompletionSource<string>();
             taskMap[taskId] = task;
+            Debug.Log("InvokeRoute before");
+            Debug.Log($"taskId : {taskId}");
+            Debug.Log($"route : {taskId}");
+            Debug.Log($"route : {msg}");
+            
             ThirdwebInvoke(taskId, route, msg, jsCallback);
             string result = await task.Task;
             Debug.Log($"InvokeRoute Result: {result}");
-            Debug.Log(JsonConvert.DeserializeObject<Result<T>>(result).result);
-            return JsonConvert.DeserializeObject<Result<T>>(result).result;
+
+            if(result == "user rejected transaction"){
+                return default(T);
+            }else{
+                Debug.Log(JsonConvert.DeserializeObject<Result<T>>(result).result);
+                return JsonConvert.DeserializeObject<Result<T>>(result).result;
+            }
+
         }
 
         public static string InvokeListener<T>(string route, string[] body, Action<T> action)

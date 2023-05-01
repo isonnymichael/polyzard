@@ -23,7 +23,7 @@ var plugin = {
         var bufferSize = lengthBytesUTF8(msg) + 1;
         var buffer = _malloc(bufferSize);
         stringToUTF8(msg, buffer, bufferSize);
-        dynCall_viii(cb, idPtr, null, buffer);
+        dynCall_viii(cb, idPtr, buffer, null);
       })
       .finally(() => {
         // callback into unity, even if the promise was rejected

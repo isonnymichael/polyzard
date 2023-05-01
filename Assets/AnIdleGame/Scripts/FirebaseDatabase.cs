@@ -21,4 +21,6 @@ public static class FirebaseDatabase
     public static extern void getTempMoney(string _address, int _tempMoney);
      [DllImport("__Internal")]
     public static extern void nextLevel(int _limit);
+    [DllImport("__Internal")]
+    public static extern string getLeaderboard();
 }

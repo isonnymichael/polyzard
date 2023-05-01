@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections;
 using System.Globalization;
@@ -40,7 +41,7 @@ public class PlayerStats : MonoBehaviour {
 		{
 			money = value;
 
-			HUD.Instance.moneyText.text = "Money: " + money.ToString (); //when change the value of money, update the text
+			HUD.Instance.moneyText.text = money.ToString (); //when change the value of money, update the text
 		}
 	}
 	public int TempMoney
@@ -54,6 +55,11 @@ public class PlayerStats : MonoBehaviour {
 			tempMoney = value;
 
 			HUD.Instance.tempMoneyText.text = " (+" + tempMoney.ToString ()+")"; //when change the value of money, update the text
+			if(tempMoney <= 0){
+				HUD.Instance.panelRedeem.SetActive(false);
+			}else{
+				HUD.Instance.panelRedeem.SetActive(true);
+			}		
 		}
 	}
 
@@ -99,10 +105,41 @@ public class PlayerStats : MonoBehaviour {
 
 	public async void UpgradeDamage () //function get called when the player click the damage upgrade button
 	{
+		
 		if (Money >= activeSkill.DamageUpgradeCost) //if the player has enough money
 		{
+			GameSFX.Instance.playClickSound();
+
+			HUD.Instance.loaderDamageUp.SetActive(true);
+			HUD.Instance.btnTempToken.GetComponent<Button>().interactable = false;
+			HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = false;
+			HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = false;
+
 			if (Application.platform == RuntimePlatform.WebGLPlayer) {
-				var data = await Web3Auth.Instance.contractGame.Read<TransactionResult>("upgradeStats", new object[] { 0, activeSkill.ID, activeSkill.DamageUpgradeCost });
+				try
+				{
+					var data = await Web3Auth.Instance.contractGame.Read<object>("upgradeStats", new object[] { 0, activeSkill.ID, activeSkill.DamageUpgradeCost });
+					
+					if(data == null){
+						HUD.Instance.loaderDamageUp.SetActive(false);
+						HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+						HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+						HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+						return;
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.Log(ex);
+					
+					HUD.Instance.loaderDamageUp.SetActive(false);
+					HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+					return;
+				}
 			}
 			
 			Money -= activeSkill.DamageUpgradeCost;
@@ -115,19 +152,64 @@ public class PlayerStats : MonoBehaviour {
 			GameManager.Instance.playerData.skills[activeSkill.ID].damageLevel = activeSkill.DamageLevel;
 
 			damageText.UpdateSkillText (activeSkill.DamageLevel, activeSkill.DamageUpgradeCost); //update the text to show the new damage level and upgrade cost
+		
+			HUD.Instance.loaderDamageUp.SetActive(false);
+			HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+			HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+			HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+			GameSFX.Instance.playRedeemSound();
 		}
 		else
 		{
 			Debug.Log ("need more money");
+			GameSFX.Instance.playDeclineSound();
+
+			GameObject popupInstance = (GameObject) Instantiate (HUD.Instance.prefabWarningUp);
+			popupInstance.transform.SetParent (HUD.Instance.hudPanel.transform, false);
+			popupInstance.transform.position = HUD.Instance.btnDamageUp.transform.position;
 		}
 	}
 
 	public async void UpgradeSpeed () //function to upgrade speed, similar to UpgradeDamage()
 	{
+
 		if (Money >= activeSkill.SpeedUpgradeCost)
 		{
+			GameSFX.Instance.playClickSound();
+
+			HUD.Instance.loaderSpeedUp.SetActive(true);
+			HUD.Instance.btnTempToken.GetComponent<Button>().interactable = false;
+			HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = false;
+			HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = false;
+
 			if (Application.platform == RuntimePlatform.WebGLPlayer) {
-				var data = await Web3Auth.Instance.contractGame.Read<TransactionResult>("upgradeStats", new object[] { 1, activeSkill.ID, activeSkill.SpeedUpgradeCost });
+
+				try
+				{
+					var data = await Web3Auth.Instance.contractGame.Read<object>("upgradeStats", new object[] { 1, activeSkill.ID, activeSkill.SpeedUpgradeCost });
+					if(data == null){
+
+						HUD.Instance.loaderSpeedUp.SetActive(false);
+						HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+						HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+						HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+						
+						return;
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.Log(ex);
+
+					HUD.Instance.loaderSpeedUp.SetActive(false);
+					HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+					return;
+				}
+
 			}
 			
 			Money -= activeSkill.SpeedUpgradeCost;
@@ -139,10 +221,22 @@ public class PlayerStats : MonoBehaviour {
 			GameManager.Instance.playerData.skills[activeSkill.ID].speedLevel = activeSkill.SpeedLevel;
 
 			speedText.UpdateSkillText (activeSkill.SpeedLevel, activeSkill.SpeedUpgradeCost);
+
+			HUD.Instance.loaderSpeedUp.SetActive(false);
+			HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+			HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+			HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+			GameSFX.Instance.playRedeemSound();
 		}
 		else
 		{
 			Debug.Log ("need more money");
+			GameSFX.Instance.playDeclineSound();
+
+			GameObject popupInstance = (GameObject) Instantiate (HUD.Instance.prefabWarningUp);
+			popupInstance.transform.SetParent (HUD.Instance.hudPanel.transform, false);
+			popupInstance.transform.position = HUD.Instance.btnSpeedUp.transform.position;
 		}
 	}
 

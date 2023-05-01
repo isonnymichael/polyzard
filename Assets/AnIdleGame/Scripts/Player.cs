@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 using Thirdweb;
 
 //script used to control accack
@@ -60,6 +61,8 @@ public class Player : MonoBehaviour {
 			Debug.Log ("All Killed");
 
 			GameManager.Instance.StopBattle (true); //we stop the battle with levelCompleted set to true
+			HUD.Instance.panelStatusBattle.SetActive(true);
+			HUD.Instance.panelStatusBattle.gameObject.GetComponentInChildren<Text>().text = "NICE!";
 		}
 	}
 
@@ -80,28 +83,54 @@ public class Player : MonoBehaviour {
 	}
 
 	public async void getToken(){
+		GameSFX.Instance.playClickSound();
 
-		try
-        {
-			var _tempMoney = PlayerStats.Instance.TempMoney;
+		HUD.Instance.loaderToken.SetActive(true);
+		HUD.Instance.btnTempToken.GetComponent<Button>().interactable = false;
+		HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = false;
+		HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = false;
 
-			if (Application.platform == RuntimePlatform.WebGLPlayer) {
-				var data = await Web3Auth.Instance.contractGame.Read<TransactionResult>("claimToken", new object[] { PlayerStats.Instance.TempMoney });
+		var _tempMoney = PlayerStats.Instance.TempMoney;
+
+		if (Application.platform == RuntimePlatform.WebGLPlayer) {
+			try
+			{
+				var data = await Web3Auth.Instance.contractGame.Read<object>("claimToken", new object[] { PlayerStats.Instance.TempMoney });
+				if(data == null){
+					HUD.Instance.loaderToken.SetActive(false);
+					HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+					HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
+
+					return;
+				}
 			}
-			
+			catch (System.Exception ex)
+			{
+				Debug.Log(ex);
+				
+				HUD.Instance.loaderToken.SetActive(false);
+				HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+				HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+				HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
 
-			PlayerStats.Instance.Money += _tempMoney;
-			PlayerStats.Instance.TempMoney =  PlayerStats.Instance.TempMoney - _tempMoney;
-			if (Application.platform == RuntimePlatform.WebGLPlayer) {
-				FirebaseDatabase.getTempMoney(Web3Auth.Instance.addressWallet, PlayerStats.Instance.TempMoney);
+				return;
 			}
-			
-        }
-        catch (System.Exception e)
-        {
-            Debugger.Instance.Log("Error", e.Message);
-        }
 
+		}
+
+		PlayerStats.Instance.Money += _tempMoney;
+		PlayerStats.Instance.TempMoney =  PlayerStats.Instance.TempMoney - _tempMoney;
+		if (Application.platform == RuntimePlatform.WebGLPlayer) {
+			FirebaseDatabase.getTempMoney(Web3Auth.Instance.addressWallet, PlayerStats.Instance.TempMoney);
+		}
+
+		HUD.Instance.loaderToken.SetActive(false);
+		HUD.Instance.btnTempToken.GetComponent<Button>().interactable = true;
+		HUD.Instance.btnDamageUp.GetComponent<Button>().interactable = true;
+		HUD.Instance.btnSpeedUp.GetComponent<Button>().interactable = true;
 		
+		GameSFX.Instance.playRedeemSound();
+
 	}
 }

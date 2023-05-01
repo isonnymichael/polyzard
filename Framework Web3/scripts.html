@@ -54,6 +54,17 @@
             return JSON.parse(newPlayer());
         }
 
+        function getLeaderboard(limit)
+        {
+          firebase.database().ref('idle-game').orderByChild('-level').limitToFirst(limit).once('value', function(snapshot) {
+                var _leaderboard = [];
+                snapshot.forEach(function(childSnapshot) {
+                    _leaderboard.push(childSnapshot.val());
+                });
+                console.log(JSON.stringify(_leaderboard));
+            });
+        }
+
         function getCurrentLocalTZ()
         {
             // Get current date and time

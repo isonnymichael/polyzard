@@ -128,6 +128,8 @@ public class ActiveSkill : MonoBehaviour {
 	{
 		if (unlocked) //only unlocked skills can be selected
 		{
+			GameSFX.Instance.playClickSound();
+
 			PlayerStats.Instance.selectedActiveSkill.SetColor (Color.white); //change the color of the former selected skill to normal
 
 			skillImage.color = HUD.Instance.highlightColor; //change the color of this skill when it's selected

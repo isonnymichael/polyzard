@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System;
+using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Thirdweb;
+using Newtonsoft.Json;
 
 //script to control the game
 public class GameManager : MonoBehaviour {
@@ -105,6 +109,8 @@ public class GameManager : MonoBehaviour {
 
 	private void StartBattle ()
 	{
+		HUD.Instance.panelStatusBattle.SetActive(false);
+
 		SpawnEnemies ();
 
 		isBattling = true;
@@ -155,6 +161,8 @@ public class GameManager : MonoBehaviour {
 
 		StopBattle (); //stop the battle if running out of time
 
+		HUD.Instance.panelStatusBattle.SetActive(true);
+		HUD.Instance.panelStatusBattle.gameObject.GetComponentInChildren<Text>().text = "Time Out";
 		Debug.Log ("time out");
 	}
 
@@ -217,4 +225,59 @@ public class GameManager : MonoBehaviour {
 		}
 			
 	}
+
+	public void ShowLeaderboard()
+	{
+		ShowingLeaderboard();
+	}
+
+	public void ShowingLeaderboard ()
+	{
+		GameSFX.Instance.playClickSound();
+		HUD.Instance.btnLeaderBoard.GetComponent<Button>().interactable = false;
+		string leaderboard = "";
+		if (Application.platform == RuntimePlatform.WebGLPlayer) {
+			FirebaseDatabase.getLeaderboard();
+		}else{
+			leaderboard = "{\"0x361eD9654eC32941B838895883C445b97a49b580\":{\"level\":3,\"quitTime\":\"05/01/202312:40:13\",\"tempMoney\":70},\"0xB622cCffE20241565132D628a60880Bc00228Eee\":{\"activatedSkillID\":0,\"level\":3,\"money\":0,\"quitTime\":\"05/01/202314:02:05\",\"skills\":[{\"ID\":0,\"damageLevel\":1,\"speedLevel\":0,\"unlocked\":true},{\"ID\":1,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":2,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":3,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":4,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":5,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":6,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false},{\"ID\":7,\"damageLevel\":0,\"speedLevel\":0,\"unlocked\":false}],\"tempMoney\":96}}";
+			ShowDataLeaderboard(leaderboard);
+		}
+	}
+
+	public void OnGetLeaderboard(string result)
+	{
+		ShowDataLeaderboard(result);
+	}
+
+	private void ShowDataLeaderboard(string result)
+	{
+		string leaderboard = result;
+		// Deserialize the string into a dictionary with a string key and a dictionary value
+		Dictionary<string, Dictionary<string, object>> leaderboardDict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(leaderboard);
+
+		int countLeaderboard = 1;
+		string txtLeaderboard = "";
+		// Print the result
+		foreach (KeyValuePair<string, Dictionary<string, object>> entry in leaderboardDict)
+		{
+			string key = entry.Key;
+			Dictionary<string, object> itemDict = entry.Value;
+			int level = Convert.ToInt32(itemDict["level"]);
+			string quitTime = (string)itemDict["quitTime"];
+			int tempMoney = Convert.ToInt32(itemDict["tempMoney"]);
+			Debug.Log($"key: {key}, level: {level}, quitTime: {quitTime}, tempMoney: {tempMoney}");
+			txtLeaderboard += countLeaderboard +". "+ key+" - Level "+level+"\n";
+			countLeaderboard++;
+		}
+
+		for (int i = countLeaderboard; i <= 10;i++){
+			txtLeaderboard += i +". 0x00000000000000000000000000000000000000000 - Level 0 \n";
+		}
+
+		txtLeaderboard = txtLeaderboard.Substring(0, txtLeaderboard.Length - 2);
+
+		HUD.Instance.textLeaderBoard.text = txtLeaderboard;
+		HUD.Instance.panelLeaderBoard.SetActive(true);
+	}
+
 }
